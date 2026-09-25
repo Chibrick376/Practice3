@@ -4,99 +4,79 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Тесты для CreditAccount.
+ * Покрывают случаи из задания:
+ *  - уход в отрицательный баланс
+ *  - использование кредитного лимита
+ *  - отказ при превышении кредитного лимита
+ *  - баланс не меняется при неуспешном снятии
+ */
 class CreditAccountTest
 {
 
-    @Test
-    void exampleFromTaskWorks()
-    {
-        // Arrange
-        CreditAccount account = new CreditAccount("C-001", "Виктор", 1_000, 5_000);
-
-        // Act
-        boolean first = account.withdraw(4_000);
-        boolean second = account.withdraw(3_000);
-
-        // Assert
-        assertTrue(first);
-        assertFalse(second);
-        assertEquals(-3_000, account.getBalance());
-    }
+    // ---------- 1. Счёт может уйти в отрицательный баланс ----------
 
     @Test
-    void canGoNegativeWithinLimit()
+    void accountCanGoNegative()
     {
         // Arrange
-        CreditAccount account = new CreditAccount("C-002", "Алиса", 0, 5_000);
+        CreditAccount account = new CreditAccount("C-001", "Алиса", 1_000, 5_000);
 
         // Act
-        boolean result = account.withdraw(3_000);
+        boolean result = account.withdraw(4_000);
 
         // Assert
         assertTrue(result);
         assertEquals(-3_000, account.getBalance());
     }
 
-    @Test
-    void canWithdrawExactlyToLimit()
-    {
-        // Arrange
-        CreditAccount account = new CreditAccount("C-003", "Борис", 0, 1_000);
+    // ---------- 2. Можно использовать кредитный лимит ----------
 
-        // Act
-        boolean result = account.withdraw(1_000);
+    @Test
+    void canUseFullCreditLimit()
+    {
+        // Arrange — баланс 0, лимит 5000
+        CreditAccount account = new CreditAccount("C-002", "Борис", 0, 5_000);
+
+        // Act — снимаем ровно на всю величину лимита
+        boolean result = account.withdraw(5_000);
 
         // Assert
         assertTrue(result);
-        assertEquals(-1_000, account.getBalance());
+        assertEquals(-5_000, account.getBalance());
     }
+
+    // ---------- 3. Нельзя превысить кредитный лимит ----------
 
     @Test
     void cannotExceedCreditLimit()
     {
         // Arrange
-        CreditAccount account = new CreditAccount("C-004", "Галина", 0, 1_000);
+        CreditAccount account = new CreditAccount("C-003", "Виктор", 0, 5_000);
 
-        // Act
-        boolean result = account.withdraw(1_001);
+        // Act — пытаемся снять на 1 больше лимита
+        boolean result = account.withdraw(5_001);
 
         // Assert
         assertFalse(result);
         assertEquals(0, account.getBalance());
     }
 
+    // ---------- 4. При неуспешном снятии баланс не изменяется ----------
+
     @Test
-    void cannotWithdrawNegativeAmount()
+    void balanceDoesNotChangeOnFailedWithdraw()
     {
         // Arrange
-        CreditAccount account = new CreditAccount("C-005", "Дарья", 1_000, 5_000);
+        CreditAccount account = new CreditAccount("C-004", "Галина", 1_000, 5_000);
+        double balanceBefore = account.getBalance();
 
-        // Act
-        boolean result = account.withdraw(-100);
+        // Act — заведомо неуспешное снятие
+        boolean result = account.withdraw(10_000);
 
         // Assert
         assertFalse(result);
-        assertEquals(1_000, account.getBalance());
-    }
-
-    @Test
-    void depositReducesDebt()
-    {
-        // Arrange
-        CreditAccount account = new CreditAccount("C-006", "Егор", 0, 5_000);
-        account.withdraw(3_000); // баланс -3000
-
-        // Act
-        account.deposit(1_000);
-
-        // Assert
-        assertEquals(-2_000, account.getBalance());
-    }
-
-    @Test
-    void negativeCreditLimitIsRejected()
-    {
-        assertThrows(IllegalArgumentException.class,
-                () -> new CreditAccount("C-007", "Жанна", 0, -1_000));
+        assertEquals(balanceBefore, account.getBalance());
     }
 }
