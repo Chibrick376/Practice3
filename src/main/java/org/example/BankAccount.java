@@ -12,9 +12,6 @@ public abstract class BankAccount
     private final String owner;
     private double balance;
 
-    /**
-     * Конструктор доступен только наследникам.
-     */
     protected BankAccount(String number, String owner, double initialBalance)
     {
         if (number == null || number.trim().isEmpty())
@@ -44,30 +41,45 @@ public abstract class BankAccount
         return balance;
     }
 
-    /**
-     * Пополняем счёт. Если сумма <= 0 — просто ничего не делаем.
-     */
     public void deposit(double amount)
     {
         if (amount <= 0)
-            // Смысла что-то менять нет — отсекаем сразу
             return;
         balance = balance + amount;
     }
 
-    /**
-     * Абстрактный метод — каждый наследник сам решает,
-     * как именно снимать деньги.
-     *
-     * @return true, если снятие прошло успешно, иначе false
-     */
     public abstract boolean withdraw(double amount);
 
-    /**
-     * Позволяет наследникам менять баланс, не открывая поле наружу.
-     */
     protected void setBalance(double newBalance)
     {
         this.balance = newBalance;
+    }
+
+    @Override
+    public String toString()
+    {
+        return getClass().getSimpleName() + "{" +
+                "number='" + number + '\'' +
+                ", owner='" + owner + '\'' +
+                ", balance=" + balance +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        BankAccount that = (BankAccount) o;
+        return number.equals(that.number);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return number.hashCode();
     }
 }
