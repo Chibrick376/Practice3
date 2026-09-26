@@ -41,11 +41,16 @@ public abstract class BankAccount
         return balance;
     }
 
+    /**
+     * Пополнение счёта.
+     * Сумма должна быть строго положительной.
+     */
     public void deposit(double amount)
     {
         if (amount <= 0)
-            return;
-        balance = balance + amount;
+            throw new IllegalArgumentException("Amount must be positive");
+
+        increaseBalance(amount);
     }
 
     public abstract boolean withdraw(double amount);
@@ -53,6 +58,11 @@ public abstract class BankAccount
     protected void setBalance(double newBalance)
     {
         this.balance = newBalance;
+    }
+
+    protected void increaseBalance(double amount)
+    {
+        this.balance = this.balance + amount;
     }
 
     @Override
