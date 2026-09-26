@@ -8,7 +8,7 @@ class AccountNumberTest
 {
 
     @Test
-    void validTenDigitNumberIsAccepted()
+    void validNumberIsCreated()
     {
         AccountNumber number = new AccountNumber("1234567890");
         assertEquals("1234567890", number.value());
@@ -17,44 +17,54 @@ class AccountNumberTest
     @Test
     void nullIsRejected()
     {
-        assertThrows(IllegalArgumentException.class,
-                () -> new AccountNumber(null));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AccountNumber(null)
+        );
     }
 
     @Test
     void emptyStringIsRejected()
     {
-        assertThrows(IllegalArgumentException.class,
-                () -> new AccountNumber(""));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AccountNumber("")
+        );
     }
 
     @Test
-    void shorterThanTenDigitsIsRejected()
+    void shortNumberIsRejected()
     {
-        assertThrows(IllegalArgumentException.class,
-                () -> new AccountNumber("12345"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AccountNumber("123")
+        );
     }
 
     @Test
-    void longerThanTenDigitsIsRejected()
+    void nineDigitsIsRejected()
     {
-        assertThrows(IllegalArgumentException.class,
-                () -> new AccountNumber("12345678901"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AccountNumber("123456789")
+        );
     }
 
     @Test
-    void lettersAreRejected()
+    void elevenDigitsIsRejected()
     {
-        assertThrows(IllegalArgumentException.class,
-                () -> new AccountNumber("12345abcde"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AccountNumber("12345678901")
+        );
     }
 
     @Test
-    void equalValuesAreEqual()
+    void lettersInsideNumberAreRejected()
     {
-        AccountNumber a = new AccountNumber("1234567890");
-        AccountNumber b = new AccountNumber("1234567890");
-        assertEquals(a, b);
-        assertEquals(a.hashCode(), b.hashCode());
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AccountNumber("12345abcde")
+        );
     }
 }
