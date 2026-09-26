@@ -1,16 +1,11 @@
 package org.example;
 
-/**
- * Сберегательный счёт.
- * После снятия денег на балансе должен оставаться
- * неснижаемый остаток — minimumBalance.
- */
 public class SavingsAccount extends BankAccount
 {
 
     private final double minimumBalance;
 
-    public SavingsAccount(String number,
+    public SavingsAccount(AccountNumber number,
                           String owner,
                           double initialBalance,
                           double minimumBalance)
@@ -37,7 +32,6 @@ public class SavingsAccount extends BankAccount
         if (amount <= 0)
             return false;
 
-        // Не даём уйти ниже неснижаемого остатка
         double afterWithdraw = getBalance() - amount;
         if (afterWithdraw < minimumBalance)
             return false;

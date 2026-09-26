@@ -8,14 +8,14 @@ package org.example;
 public abstract class BankAccount
 {
 
-    private final String number;
+    private final AccountNumber number;
     private final String owner;
     private double balance;
 
-    protected BankAccount(String number, String owner, double initialBalance)
+    protected BankAccount(AccountNumber number, String owner, double initialBalance)
     {
-        if (number == null || number.trim().isEmpty())
-            throw new IllegalArgumentException("Номер счёта не может быть пустым!");
+        if (number == null)
+            throw new IllegalArgumentException("Номер счёта не может быть null!");
         if (owner == null || owner.trim().isEmpty())
             throw new IllegalArgumentException("Имя владельца не может быть пустым!");
         if (initialBalance < 0)
@@ -26,7 +26,7 @@ public abstract class BankAccount
         this.balance = initialBalance;
     }
 
-    public String getNumber()
+    public AccountNumber getNumber()
     {
         return number;
     }
@@ -59,7 +59,7 @@ public abstract class BankAccount
     public String toString()
     {
         return getClass().getSimpleName() + "{" +
-                "number='" + number + '\'' +
+                "number='" + number.value() + '\'' +
                 ", owner='" + owner + '\'' +
                 ", balance=" + balance +
                 '}';
