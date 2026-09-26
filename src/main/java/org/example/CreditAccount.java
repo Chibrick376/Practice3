@@ -13,7 +13,7 @@ public class CreditAccount extends BankAccount
         super(number, owner, initialBalance);
 
         if (creditLimit < 0)
-            throw new IllegalArgumentException("Кредитный лимит не может быть отрицательным!");
+            throw new IllegalArgumentException("Credit limit must not be negative");
 
         this.creditLimit = creditLimit;
     }
@@ -24,16 +24,14 @@ public class CreditAccount extends BankAccount
     }
 
     @Override
-    public boolean withdraw(double amount)
+    public void withdraw(double amount)
     {
         if (amount <= 0)
-            return false;
+            throw new IllegalArgumentException("Amount must be positive");
 
-        double afterWithdraw = getBalance() - amount;
-        if (afterWithdraw < -creditLimit)
-            return false;
+        if (getBalance() - amount < -creditLimit)
+            throw new InsufficientFundsException("Insufficient funds");
 
-        setBalance(afterWithdraw);
-        return true;
+        decreaseBalance(amount);
     }
 }

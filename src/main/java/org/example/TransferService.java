@@ -10,9 +10,9 @@ public class TransferService
                            NotificationService notificationService)
     {
         if (commissionPolicy == null)
-            throw new IllegalArgumentException("Политика комиссии не может быть null!");
+            throw new IllegalArgumentException("Commission policy must not be null");
         if (notificationService == null)
-            throw new IllegalArgumentException("Сервис уведомлений не может быть null!");
+            throw new IllegalArgumentException("Notification service must not be null");
 
         this.commissionPolicy = commissionPolicy;
         this.notificationService = notificationService;
@@ -29,10 +29,14 @@ public class TransferService
         double commission = commissionPolicy.calculate(amount);
         double total = amount + commission;
 
-        boolean withdrawn = from.withdraw(total);
-
-        if (!withdrawn)
+        try
+        {
+            from.withdraw(total);
+        }
+        catch (InsufficientFundsException e)
+        {
             return false;
+        }
 
         to.deposit(amount);
 

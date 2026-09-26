@@ -53,7 +53,11 @@ public abstract class BankAccount
         increaseBalance(amount);
     }
 
-    public abstract boolean withdraw(double amount);
+    /**
+     * Снятие денег со счёта.
+     * Успех — нормальное завершение, ошибка — исключение.
+     */
+    public abstract void withdraw(double amount);
 
     protected void setBalance(double newBalance)
     {
@@ -63,6 +67,11 @@ public abstract class BankAccount
     protected void increaseBalance(double amount)
     {
         this.balance = this.balance + amount;
+    }
+
+    protected void decreaseBalance(double amount)
+    {
+        this.balance = this.balance - amount;
     }
 
     @Override

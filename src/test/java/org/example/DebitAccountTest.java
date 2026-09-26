@@ -55,8 +55,8 @@ class DebitAccountTest
     {
         DebitAccount account = new DebitAccount(
                 new AccountNumber("0000000005"), "Дарья", 10_000);
-        boolean result = account.withdraw(3_000);
-        assertTrue(result);
+
+        assertDoesNotThrow(() -> account.withdraw(3_000));
         assertEquals(7_000, account.getBalance());
     }
 
@@ -65,8 +65,11 @@ class DebitAccountTest
     {
         DebitAccount account = new DebitAccount(
                 new AccountNumber("0000000006"), "Егор", 1_000);
-        boolean result = account.withdraw(3_000);
-        assertFalse(result);
+
+        assertThrows(
+                InsufficientFundsException.class,
+                () -> account.withdraw(3_000)
+        );
         assertEquals(1_000, account.getBalance());
     }
 
@@ -75,8 +78,11 @@ class DebitAccountTest
     {
         DebitAccount account = new DebitAccount(
                 new AccountNumber("0000000007"), "Жанна", 5_000);
-        boolean result = account.withdraw(0);
-        assertFalse(result);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> account.withdraw(0)
+        );
         assertEquals(5_000, account.getBalance());
     }
 
@@ -85,8 +91,11 @@ class DebitAccountTest
     {
         DebitAccount account = new DebitAccount(
                 new AccountNumber("0000000008"), "Иван", 5_000);
-        boolean result = account.withdraw(-100);
-        assertFalse(result);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> account.withdraw(-100)
+        );
         assertEquals(5_000, account.getBalance());
     }
 }

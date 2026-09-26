@@ -13,10 +13,9 @@ public class SavingsAccount extends BankAccount
         super(number, owner, initialBalance);
 
         if (minimumBalance < 0)
-            throw new IllegalArgumentException("Минимальный остаток не может быть отрицательным!");
+            throw new IllegalArgumentException("Minimum balance must not be negative");
         if (initialBalance < minimumBalance)
-            throw new IllegalArgumentException(
-                    "Начальный баланс не может быть меньше минимального остатка!");
+            throw new IllegalArgumentException("Initial balance must be >= minimum balance");
 
         this.minimumBalance = minimumBalance;
     }
@@ -27,16 +26,14 @@ public class SavingsAccount extends BankAccount
     }
 
     @Override
-    public boolean withdraw(double amount)
+    public void withdraw(double amount)
     {
         if (amount <= 0)
-            return false;
+            throw new IllegalArgumentException("Amount must be positive");
 
-        double afterWithdraw = getBalance() - amount;
-        if (afterWithdraw < minimumBalance)
-            return false;
+        if (getBalance() - amount < minimumBalance)
+            throw new InsufficientFundsException("Insufficient funds");
 
-        setBalance(afterWithdraw);
-        return true;
+        decreaseBalance(amount);
     }
 }
