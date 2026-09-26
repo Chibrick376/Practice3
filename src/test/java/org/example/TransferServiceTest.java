@@ -17,82 +17,10 @@ class TransferServiceTest
         BankAccount to = new DebitAccount(
                 new AccountNumber("0000000102"), "Борис", 2_000);
 
-        boolean result = service.transfer(from, to, 3_000);
+        assertDoesNotThrow(() -> service.transfer(from, to, 3_000));
 
-        assertTrue(result);
         assertEquals(7_000, from.getBalance());
         assertEquals(5_000, to.getBalance());
-    }
-
-    @Test
-    void failedTransferDoesNotChangeAnyBalance()
-    {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
-        BankAccount from = new DebitAccount(
-                new AccountNumber("0000000103"), "Виктор", 1_000);
-        BankAccount to = new DebitAccount(
-                new AccountNumber("0000000104"), "Галина", 2_000);
-
-        boolean result = service.transfer(from, to, 3_000);
-
-        assertFalse(result);
-        assertEquals(1_000, from.getBalance());
-        assertEquals(2_000, to.getBalance());
-    }
-
-    @Test
-    void cannotTransferNegativeAmount()
-    {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
-        BankAccount from = new DebitAccount(
-                new AccountNumber("0000000105"), "Дарья", 5_000);
-        BankAccount to = new DebitAccount(
-                new AccountNumber("0000000106"), "Егор", 1_000);
-
-        assertFalse(service.transfer(from, to, -500));
-    }
-
-    @Test
-    void cannotTransferZeroAmount()
-    {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
-        BankAccount from = new DebitAccount(
-                new AccountNumber("0000000107"), "Жанна", 5_000);
-        BankAccount to = new DebitAccount(
-                new AccountNumber("0000000108"), "Иван", 1_000);
-
-        assertFalse(service.transfer(from, to, 0));
-    }
-
-    @Test
-    void cannotTransferToSameAccount()
-    {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
-        BankAccount account = new DebitAccount(
-                new AccountNumber("0000000109"), "Ксения", 5_000);
-
-        assertFalse(service.transfer(account, account, 1_000));
-        assertEquals(5_000, account.getBalance());
-    }
-
-    @Test
-    void commissionIsChargedFromSender()
-    {
-        TransferService service = new TransferService(
-                new PercentCommission(1), new FakeNotificationService());
-        BankAccount from = new DebitAccount(
-                new AccountNumber("0000000110"), "Леонид", 11_000);
-        BankAccount to = new DebitAccount(
-                new AccountNumber("0000000111"), "Мария", 2_000);
-
-        boolean result = service.transfer(from, to, 10_000);
-
-        assertTrue(result);
-        assertEquals(900, from.getBalance());
     }
 
     @Test
@@ -105,15 +33,103 @@ class TransferServiceTest
         BankAccount to = new DebitAccount(
                 new AccountNumber("0000000113"), "Ольга", 1_000);
 
-        boolean result = service.transfer(from, to, 10_000);
+        assertDoesNotThrow(() -> service.transfer(from, to, 10_000));
 
-        assertTrue(result);
         assertEquals(11_000, to.getBalance());
         assertEquals(9_500, from.getBalance());
     }
 
     @Test
-    void transferFailsWhenFundsAreInsufficientForCommission()
+    void commissionIsChargedFromSender()
+    {
+        TransferService service = new TransferService(
+                new PercentCommission(1), new FakeNotificationService());
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000110"), "Леонид", 11_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000111"), "Мария", 2_000);
+
+        assertDoesNotThrow(() -> service.transfer(from, to, 10_000));
+
+        assertEquals(900, from.getBalance());
+        assertEquals(12_000, to.getBalance());
+    }
+
+    @Test
+    void negativeAmountThrowsException()
+    {
+        TransferService service = new TransferService(
+                new NoCommission(), new FakeNotificationService());
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000105"), "Дарья", 5_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000106"), "Егор", 1_000);
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.transfer(from, to, -500)
+        );
+        assertEquals("Amount must be positive", ex.getMessage());
+        assertEquals(5_000, from.getBalance());
+        assertEquals(1_000, to.getBalance());
+    }
+
+    @Test
+    void zeroAmountThrowsException()
+    {
+        TransferService service = new TransferService(
+                new NoCommission(), new FakeNotificationService());
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000107"), "Жанна", 5_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000108"), "Иван", 1_000);
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.transfer(from, to, 0)
+        );
+        assertEquals("Amount must be positive", ex.getMessage());
+        assertEquals(5_000, from.getBalance());
+        assertEquals(1_000, to.getBalance());
+    }
+
+    @Test
+    void transferToSameAccountThrowsException()
+    {
+        TransferService service = new TransferService(
+                new NoCommission(), new FakeNotificationService());
+        BankAccount account = new DebitAccount(
+                new AccountNumber("0000000109"), "Ксения", 5_000);
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.transfer(account, account, 1_000)
+        );
+        assertEquals("Cannot transfer to the same account", ex.getMessage());
+        assertEquals(5_000, account.getBalance());
+    }
+
+    @Test
+    void insufficientFundsThrowsException()
+    {
+        TransferService service = new TransferService(
+                new NoCommission(), new FakeNotificationService());
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000103"), "Виктор", 1_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000104"), "Галина", 2_000);
+
+        InsufficientFundsException ex = assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(from, to, 3_000)
+        );
+        assertEquals("Insufficient funds", ex.getMessage());
+        assertEquals(1_000, from.getBalance());
+        assertEquals(2_000, to.getBalance());
+    }
+
+    @Test
+    void insufficientFundsForCommissionThrowsException()
     {
         TransferService service = new TransferService(
                 new PercentCommission(1), new FakeNotificationService());
@@ -122,11 +138,66 @@ class TransferServiceTest
         BankAccount to = new DebitAccount(
                 new AccountNumber("0000000115"), "Раиса", 2_000);
 
-        boolean result = service.transfer(from, to, 10_000);
-
-        assertFalse(result);
+        InsufficientFundsException ex = assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(from, to, 10_000)
+        );
+        assertEquals("Insufficient funds", ex.getMessage());
         assertEquals(10_000, from.getBalance());
         assertEquals(2_000, to.getBalance());
+    }
+
+    @Test
+    void transferAboveLimitThrowsException()
+    {
+        TransferService service = new TransferService(
+                new NoCommission(), new FakeNotificationService());
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000130"), "Максим", 1_000_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000131"), "Нина", 0);
+
+        TransferLimitExceededException ex = assertThrows(
+                TransferLimitExceededException.class,
+                () -> service.transfer(from, to, 50_001)
+        );
+        assertEquals("Transfer limit exceeded", ex.getMessage());
+        assertEquals(1_000_000, from.getBalance());
+        assertEquals(0, to.getBalance());
+    }
+
+    @Test
+    void transferExactlyAtLimitSucceeds()
+    {
+        TransferService service = new TransferService(
+                new NoCommission(), new FakeNotificationService());
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000132"), "Тест", 100_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000133"), "Тест", 0);
+
+        assertDoesNotThrow(() -> service.transfer(from, to, 50_000));
+
+        assertEquals(50_000, from.getBalance());
+        assertEquals(50_000, to.getBalance());
+    }
+
+    @Test
+    void receiverDoesNotReceiveMoneyOnFailedTransfer()
+    {
+        TransferService service = new TransferService(
+                new NoCommission(), new FakeNotificationService());
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000142"), "Роман", 500);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000143"), "Светлана", 0);
+
+        assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(from, to, 1_000)
+        );
+        assertEquals(500, from.getBalance());
+        assertEquals(0, to.getBalance());
     }
 
     @Test
@@ -139,7 +210,7 @@ class TransferServiceTest
         BankAccount to = new DebitAccount(
                 new AccountNumber("0000000121"), "Борис", 1_000);
 
-        assertTrue(service.transfer(from, to, 2_000));
+        assertDoesNotThrow(() -> service.transfer(from, to, 2_000));
         assertEquals(3_000, from.getBalance());
         assertEquals(3_000, to.getBalance());
     }
@@ -154,7 +225,7 @@ class TransferServiceTest
         BankAccount to = new SavingsAccount(
                 new AccountNumber("0000000123"), "Глеб", 2_000, 1_000);
 
-        assertTrue(service.transfer(from, to, 2_500));
+        assertDoesNotThrow(() -> service.transfer(from, to, 2_500));
         assertEquals(2_500, from.getBalance());
         assertEquals(4_500, to.getBalance());
     }
@@ -169,7 +240,7 @@ class TransferServiceTest
         BankAccount to = new DebitAccount(
                 new AccountNumber("0000000125"), "Елена", 500);
 
-        assertTrue(service.transfer(from, to, 3_000));
+        assertDoesNotThrow(() -> service.transfer(from, to, 3_000));
         assertEquals(-2_000, from.getBalance());
         assertEquals(3_500, to.getBalance());
     }
@@ -184,7 +255,7 @@ class TransferServiceTest
         BankAccount to = new DebitAccount(
                 new AccountNumber("0000000127"), "Игорь", 500);
 
-        assertTrue(service.transfer(from, to, 7_000));
+        assertDoesNotThrow(() -> service.transfer(from, to, 7_000));
         assertEquals(3_000, from.getBalance());
         assertEquals(7_500, to.getBalance());
     }
@@ -199,7 +270,10 @@ class TransferServiceTest
         BankAccount to = new DebitAccount(
                 new AccountNumber("0000000129"), "Лариса", 500);
 
-        assertFalse(service.transfer(from, to, 3_500));
+        assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(from, to, 3_500)
+        );
         assertEquals(5_000, from.getBalance());
         assertEquals(500, to.getBalance());
     }
@@ -210,11 +284,14 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new NoCommission(), new FakeNotificationService());
         BankAccount from = new CreditAccount(
-                new AccountNumber("0000000130"), "Максим", 0, 1_000);
+                new AccountNumber("0000000134"), "Максим", 0, 1_000);
         BankAccount to = new DebitAccount(
-                new AccountNumber("0000000131"), "Нина", 500);
+                new AccountNumber("0000000135"), "Нина", 500);
 
-        assertFalse(service.transfer(from, to, 2_000));
+        assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(from, to, 2_000)
+        );
         assertEquals(0, from.getBalance());
         assertEquals(500, to.getBalance());
     }
@@ -242,12 +319,14 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new NoCommission(), notificationService);
         BankAccount from = new DebitAccount(
-                new AccountNumber("0000000142"), "Роман", 500);
+                new AccountNumber("0000000144"), "Роман", 500);
         BankAccount to = new DebitAccount(
-                new AccountNumber("0000000143"), "Светлана", 0);
+                new AccountNumber("0000000145"), "Светлана", 0);
 
-        service.transfer(from, to, 1_000);
-
+        assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(from, to, 1_000)
+        );
         assertEquals(0, notificationService.getNotificationCount());
     }
 
@@ -258,9 +337,9 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new NoCommission(), notificationService);
         BankAccount from = new DebitAccount(
-                new AccountNumber("0000000144"), "Тимур", 5_000);
+                new AccountNumber("0000000146"), "Тимур", 5_000);
         BankAccount to = new DebitAccount(
-                new AccountNumber("0000000145"), "Ульяна", 0);
+                new AccountNumber("0000000147"), "Ульяна", 0);
 
         service.transfer(from, to, 3_000);
 
