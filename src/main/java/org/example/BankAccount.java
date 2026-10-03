@@ -5,7 +5,7 @@ package org.example;
  * Хранит номер, владельца и баланс.
  * Напрямую менять баланс снаружи нельзя — только через методы.
  */
-public abstract class BankAccount
+public abstract class BankAccount implements Identifiable<AccountNumber>
 {
 
     private final AccountNumber number;
@@ -27,6 +27,12 @@ public abstract class BankAccount
     }
 
     public AccountNumber getNumber()
+    {
+        return number;
+    }
+
+    @Override
+    public AccountNumber getId()
     {
         return number;
     }
