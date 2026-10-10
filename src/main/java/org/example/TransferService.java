@@ -8,10 +8,12 @@ public class TransferService
     private final CommissionPolicy commissionPolicy;
     private final NotificationService notificationService;
     private final BlockedAccountRegistry blockedAccounts;
+    private final TransactionJournal journal;
 
     public TransferService(CommissionPolicy commissionPolicy,
                            NotificationService notificationService,
-                           BlockedAccountRegistry blockedAccounts)
+                           BlockedAccountRegistry blockedAccounts,
+                           TransactionJournal journal)
     {
         if (commissionPolicy == null)
             throw new IllegalArgumentException("Commission policy must not be null");
@@ -19,10 +21,13 @@ public class TransferService
             throw new IllegalArgumentException("Notification service must not be null");
         if (blockedAccounts == null)
             throw new IllegalArgumentException("Blocked account registry must not be null");
+        if (journal == null)
+            throw new IllegalArgumentException("Transaction journal must not be null");
 
         this.commissionPolicy = commissionPolicy;
         this.notificationService = notificationService;
         this.blockedAccounts = blockedAccounts;
+        this.journal = journal;
     }
 
     public void transfer(BankAccount from, BankAccount to, double amount)
@@ -45,6 +50,13 @@ public class TransferService
         from.withdraw(total);
 
         to.deposit(amount);
+
+        journal.add(new Transaction(
+                TransactionType.TRANSFER,
+                from.getNumber(),
+                amount,
+                TransactionStatus.SUCCESS
+        ));
 
         notificationService.notify("Transfer " + amount + " completed");
     }

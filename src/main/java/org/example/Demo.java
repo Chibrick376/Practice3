@@ -8,7 +8,8 @@ public class Demo
         TransferService transferService = new TransferService(
                 new NoCommission(),
                 new ConsoleNotificationService(),
-                new BlockedAccountRegistry()
+                new BlockedAccountRegistry(),
+                new TransactionJournal()
         );
 
         BankAccount from = new DebitAccount(
@@ -75,7 +76,8 @@ public class Demo
         TransferService withCommission = new TransferService(
                 new PercentCommission(1),
                 new ConsoleNotificationService(),
-                new BlockedAccountRegistry()
+                new BlockedAccountRegistry(),
+                new TransactionJournal()
         );
         BankAccount from2 = new DebitAccount(
                 new AccountNumber("0000000003"), "Anna", 20_000);

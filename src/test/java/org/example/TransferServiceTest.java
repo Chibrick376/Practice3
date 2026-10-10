@@ -12,7 +12,8 @@ class TransferServiceTest
         return new TransferService(
                 new NoCommission(),
                 notificationService,
-                new BlockedAccountRegistry()
+                new BlockedAccountRegistry(),
+                new TransactionJournal()
         );
     }
 
@@ -174,7 +175,8 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new PercentCommission(1),
                 new FakeNotificationService(),
-                new BlockedAccountRegistry()
+                new BlockedAccountRegistry(),
+                new TransactionJournal()
         );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000208"), "Тест", 10_000);
@@ -261,7 +263,8 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new PercentCommission(5),
                 new FakeNotificationService(),
-                new BlockedAccountRegistry()
+                new BlockedAccountRegistry(),
+                new TransactionJournal()
         );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000112"), "Николай", 20_000);
@@ -280,7 +283,8 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new PercentCommission(1),
                 new FakeNotificationService(),
-                new BlockedAccountRegistry()
+                new BlockedAccountRegistry(),
+                new TransactionJournal()
         );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000110"), "Леонид", 11_000);
@@ -346,7 +350,8 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new NoCommission(),
                 new FakeNotificationService(),
-                blocked
+                blocked,
+                new TransactionJournal()
         );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000301"), "Игорь", 10_000);
@@ -368,7 +373,8 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new NoCommission(),
                 new FakeNotificationService(),
-                blocked
+                blocked,
+                new TransactionJournal()
         );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000303"), "Игорь", 10_000);
@@ -393,7 +399,8 @@ class TransferServiceTest
         TransferService service = new TransferService(
                 new NoCommission(),
                 notificationService,
-                blocked
+                blocked,
+                new TransactionJournal()
         );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000305"), "Игорь", 10_000);
@@ -407,5 +414,52 @@ class TransferServiceTest
                 () -> service.transfer(from, to, 1_000)
         );
         assertEquals(0, notificationService.getNotificationCount());
+    }
+
+    @Test
+    void successfulTransferAddsJournalEntry()
+    {
+        TransactionJournal journal = new TransactionJournal();
+        TransferService service = new TransferService(
+                new NoCommission(),
+                new FakeNotificationService(),
+                new BlockedAccountRegistry(),
+                journal
+        );
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000401"), "Игорь", 10_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000402"), "Лена", 1_000);
+
+        service.transfer(from, to, 3_000);
+
+        assertEquals(1, journal.size());
+        Transaction tx = journal.findAll().get(0);
+        assertEquals(TransactionType.TRANSFER, tx.type());
+        assertEquals(from.getNumber(), tx.account());
+        assertEquals(3_000, tx.amount());
+        assertEquals(TransactionStatus.SUCCESS, tx.status());
+    }
+
+    @Test
+    void failedTransferDoesNotAddJournalEntry()
+    {
+        TransactionJournal journal = new TransactionJournal();
+        TransferService service = new TransferService(
+                new NoCommission(),
+                new FakeNotificationService(),
+                new BlockedAccountRegistry(),
+                journal
+        );
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000403"), "Игорь", 1_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000404"), "Лена", 1_000);
+
+        assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(from, to, 5_000)
+        );
+        assertEquals(0, journal.size());
     }
 }
