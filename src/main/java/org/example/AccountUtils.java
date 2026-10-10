@@ -3,41 +3,43 @@ package org.example;
 import java.util.List;
 
 /**
- * Утилиты для работы со счетами.
- * Демонстрация принципа PECS: Producer Extends.
+ * Утилиты для работы с банковскими счетами.
  */
-public final class AccountUtils {
+public final class AccountUtils
+{
 
-    private AccountUtils() {
+    private AccountUtils()
+    {
     }
 
     /**
-     * Считает суммарный баланс любого списка счетов.
-     * Принимает List<BankAccount>, List<DebitAccount>,
-     * List<SavingsAccount>, List<CreditAccount> и т.д.
-     *
-     * accounts — "producer": мы только читаем из него элементы
-     * типа BankAccount, поэтому используется ? extends BankAccount.
+     * Суммарный баланс любого списка счетов.
      */
-    public static double totalBalance(List<? extends BankAccount> accounts) {
+    public static double totalBalance(List<? extends BankAccount> accounts)
+    {
         double total = 0;
-        for (BankAccount account : accounts) {
+        for (BankAccount account : accounts)
+        {
             total += account.getBalance();
         }
         return total;
     }
 
-    /*
-     * ВНУТРИ этого метода нельзя писать:
-     *
-     *     accounts.add(new DebitAccount(...));  // ошибка компиляции
-     *
-     * Причина: компилятор не знает реальный тип списка. Он может быть
-     * List<DebitAccount>, List<SavingsAccount> или List<CreditAccount>.
-     * Если бы разрешили добавить DebitAccount в List<SavingsAccount>,
-     * типобезопасность бы разрушилась. Поэтому для ? extends X
-     * добавление (кроме null) запрещено.
-     *
-     * PECS: Producer Extends, Consumer Super.
+    /**
+     * Возвращает счёт с максимальным балансом.
+     * Список не может быть пустым.
      */
+    public static <T extends BankAccount> T richest(List<T> accounts)
+    {
+        if (accounts == null || accounts.isEmpty())
+            throw new IllegalArgumentException("Accounts list must not be empty");
+
+        T best = accounts.get(0);
+        for (T account : accounts)
+        {
+            if (account.getBalance() > best.getBalance())
+                best = account;
+        }
+        return best;
+    }
 }
