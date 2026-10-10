@@ -7,7 +7,8 @@ public class Demo
     {
         TransferService transferService = new TransferService(
                 new NoCommission(),
-                new ConsoleNotificationService()
+                new ConsoleNotificationService(),
+                new BlockedAccountRegistry()
         );
 
         BankAccount from = new DebitAccount(
@@ -73,7 +74,8 @@ public class Demo
         System.out.println("=== Перевод с комиссией 1% ===");
         TransferService withCommission = new TransferService(
                 new PercentCommission(1),
-                new ConsoleNotificationService()
+                new ConsoleNotificationService(),
+                new BlockedAccountRegistry()
         );
         BankAccount from2 = new DebitAccount(
                 new AccountNumber("0000000003"), "Anna", 20_000);

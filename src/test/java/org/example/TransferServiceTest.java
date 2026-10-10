@@ -7,15 +7,19 @@ import static org.junit.jupiter.api.Assertions.*;
 class TransferServiceTest
 {
 
-    // ==========================================================
-    //  ОБЯЗАТЕЛЬНЫЕ ТЕСТЫ НА ИСКЛЮЧЕНИЯ (Этап 12)
-    // ==========================================================
+    private TransferService service(NotificationService notificationService)
+    {
+        return new TransferService(
+                new NoCommission(),
+                notificationService,
+                new BlockedAccountRegistry()
+        );
+    }
 
     @Test
     void negativeTransferThrowsException()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000105"), "Дарья", 5_000);
         BankAccount to = new DebitAccount(
@@ -33,8 +37,7 @@ class TransferServiceTest
     @Test
     void zeroTransferThrowsException()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000107"), "Жанна", 5_000);
         BankAccount to = new DebitAccount(
@@ -52,8 +55,7 @@ class TransferServiceTest
     @Test
     void transferToSameAccountThrowsException()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount account = new DebitAccount(
                 new AccountNumber("0000000109"), "Ксения", 5_000);
 
@@ -68,8 +70,7 @@ class TransferServiceTest
     @Test
     void transferWithoutEnoughMoneyThrowsException()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000103"), "Виктор", 1_000);
         BankAccount to = new DebitAccount(
@@ -87,8 +88,7 @@ class TransferServiceTest
     @Test
     void transferOverLimitThrowsException()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000130"), "Максим", 1_000_000);
         BankAccount to = new DebitAccount(
@@ -103,15 +103,10 @@ class TransferServiceTest
         assertEquals(0, to.getBalance());
     }
 
-    // ==========================================================
-    //  ЭТАП 13. СОСТОЯНИЕ СИСТЕМЫ ПОСЛЕ ОШИБКИ
-    // ==========================================================
-
     @Test
     void failedTransferDoesNotChangeBalances()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000201"), "Тест", 1_000);
         BankAccount to = new DebitAccount(
@@ -128,8 +123,7 @@ class TransferServiceTest
     @Test
     void failedTransferByLimitDoesNotChangeBalances()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000203"), "Тест", 100_000);
         BankAccount to = new DebitAccount(
@@ -146,8 +140,7 @@ class TransferServiceTest
     @Test
     void failedTransferBySameAccountDoesNotChangeBalance()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount account = new DebitAccount(
                 new AccountNumber("0000000205"), "Тест", 5_000);
 
@@ -161,8 +154,7 @@ class TransferServiceTest
     @Test
     void failedTransferByInvalidAmountDoesNotChangeBalances()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000206"), "Тест", 5_000);
         BankAccount to = new DebitAccount(
@@ -180,7 +172,10 @@ class TransferServiceTest
     void failedTransferByCommissionDoesNotChangeBalances()
     {
         TransferService service = new TransferService(
-                new PercentCommission(1), new FakeNotificationService());
+                new PercentCommission(1),
+                new FakeNotificationService(),
+                new BlockedAccountRegistry()
+        );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000208"), "Тест", 10_000);
         BankAccount to = new DebitAccount(
@@ -197,8 +192,7 @@ class TransferServiceTest
     @Test
     void failedTransferFromSavingsDoesNotChangeBalances()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new SavingsAccount(
                 new AccountNumber("0000000210"), "Тест", 5_000, 2_000);
         BankAccount to = new DebitAccount(
@@ -215,8 +209,7 @@ class TransferServiceTest
     @Test
     void failedTransferFromCreditDoesNotChangeBalances()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new CreditAccount(
                 new AccountNumber("0000000212"), "Тест", 0, 1_000);
         BankAccount to = new DebitAccount(
@@ -234,8 +227,7 @@ class TransferServiceTest
     void failedTransferDoesNotSendNotification()
     {
         FakeNotificationService notificationService = new FakeNotificationService();
-        TransferService service = new TransferService(
-                new NoCommission(), notificationService);
+        TransferService service = service(notificationService);
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000214"), "Тест", 1_000);
         BankAccount to = new DebitAccount(
@@ -248,15 +240,10 @@ class TransferServiceTest
         assertEquals(0, notificationService.getNotificationCount());
     }
 
-    // ==========================================================
-    //  УСПЕШНЫЕ ПЕРЕВОДЫ (регрессионные)
-    // ==========================================================
-
     @Test
     void successfulTransferChangesBothBalances()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000101"), "Алиса", 10_000);
         BankAccount to = new DebitAccount(
@@ -272,7 +259,10 @@ class TransferServiceTest
     void receiverGetsExactlyTransferAmount()
     {
         TransferService service = new TransferService(
-                new PercentCommission(5), new FakeNotificationService());
+                new PercentCommission(5),
+                new FakeNotificationService(),
+                new BlockedAccountRegistry()
+        );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000112"), "Николай", 20_000);
         BankAccount to = new DebitAccount(
@@ -288,7 +278,10 @@ class TransferServiceTest
     void commissionIsChargedFromSender()
     {
         TransferService service = new TransferService(
-                new PercentCommission(1), new FakeNotificationService());
+                new PercentCommission(1),
+                new FakeNotificationService(),
+                new BlockedAccountRegistry()
+        );
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000110"), "Леонид", 11_000);
         BankAccount to = new DebitAccount(
@@ -303,8 +296,7 @@ class TransferServiceTest
     @Test
     void transferExactlyAtLimitSucceeds()
     {
-        TransferService service = new TransferService(
-                new NoCommission(), new FakeNotificationService());
+        TransferService service = service(new FakeNotificationService());
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000132"), "Тест", 100_000);
         BankAccount to = new DebitAccount(
@@ -316,16 +308,11 @@ class TransferServiceTest
         assertEquals(50_000, to.getBalance());
     }
 
-    // ==========================================================
-    //  УВЕДОМЛЕНИЯ
-    // ==========================================================
-
     @Test
     void exactlyOneNotificationIsSentAfterSuccessfulTransfer()
     {
         FakeNotificationService notificationService = new FakeNotificationService();
-        TransferService service = new TransferService(
-                new NoCommission(), notificationService);
+        TransferService service = service(notificationService);
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000140"), "Олег", 5_000);
         BankAccount to = new DebitAccount(
@@ -340,8 +327,7 @@ class TransferServiceTest
     void notificationTextMatchesExpected()
     {
         FakeNotificationService notificationService = new FakeNotificationService();
-        TransferService service = new TransferService(
-                new NoCommission(), notificationService);
+        TransferService service = service(notificationService);
         BankAccount from = new DebitAccount(
                 new AccountNumber("0000000146"), "Тимур", 5_000);
         BankAccount to = new DebitAccount(
@@ -351,5 +337,75 @@ class TransferServiceTest
 
         assertEquals("Transfer 3000.0 completed",
                 notificationService.getLastMessage());
+    }
+
+    @Test
+    void transferFromBlockedAccountThrowsException()
+    {
+        BlockedAccountRegistry blocked = new BlockedAccountRegistry();
+        TransferService service = new TransferService(
+                new NoCommission(),
+                new FakeNotificationService(),
+                blocked
+        );
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000301"), "Игорь", 10_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000302"), "Лена", 1_000);
+
+        blocked.block(from.getNumber());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.transfer(from, to, 1_000)
+        );
+    }
+
+    @Test
+    void blockedTransferDoesNotChangeBalances()
+    {
+        BlockedAccountRegistry blocked = new BlockedAccountRegistry();
+        TransferService service = new TransferService(
+                new NoCommission(),
+                new FakeNotificationService(),
+                blocked
+        );
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000303"), "Игорь", 10_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000304"), "Лена", 1_000);
+
+        blocked.block(from.getNumber());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.transfer(from, to, 1_000)
+        );
+        assertEquals(10_000, from.getBalance());
+        assertEquals(1_000, to.getBalance());
+    }
+
+    @Test
+    void blockedTransferDoesNotSendNotification()
+    {
+        BlockedAccountRegistry blocked = new BlockedAccountRegistry();
+        FakeNotificationService notificationService = new FakeNotificationService();
+        TransferService service = new TransferService(
+                new NoCommission(),
+                notificationService,
+                blocked
+        );
+        BankAccount from = new DebitAccount(
+                new AccountNumber("0000000305"), "Игорь", 10_000);
+        BankAccount to = new DebitAccount(
+                new AccountNumber("0000000306"), "Лена", 1_000);
+
+        blocked.block(from.getNumber());
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.transfer(from, to, 1_000)
+        );
+        assertEquals(0, notificationService.getNotificationCount());
     }
 }
