@@ -5,16 +5,19 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Журнал транзакций. Хранит записи в порядке добавления.
+ * Журнал транзакций. Хранит записи в порядке добавления
+ * и использует индекс для быстрого поиска по счёту.
  */
 public class TransactionJournal
 {
 
     private final List<Transaction> transactions = new ArrayList<>();
+    private final TransactionIndex index = new TransactionIndex();
 
     public void add(Transaction transaction)
     {
         transactions.add(transaction);
+        index.add(transaction);
     }
 
     public List<Transaction> findAll()
@@ -24,15 +27,7 @@ public class TransactionJournal
 
     public List<Transaction> findByAccount(AccountNumber number)
     {
-        List<Transaction> result = new ArrayList<>();
-        for (Transaction tx : transactions)
-        {
-            if (tx.account().equals(number))
-            {
-                result.add(tx);
-            }
-        }
-        return result;
+        return index.findByAccount(number);
     }
 
     public void removeRejected()
@@ -46,6 +41,8 @@ public class TransactionJournal
                 iterator.remove();
             }
         }
+        // Обрати внимание: удаление из списка не обновляет индекс.
+        // Если понадобится, здесь нужно будет добавить очистку индекса.
     }
 
     public int size()

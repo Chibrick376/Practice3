@@ -158,4 +158,17 @@ class TransactionJournalTest
 
         assertTrue(result.isEmpty());
     }
+
+    @Test
+    void addPopulatesBothListAndIndex()
+    {
+        TransactionJournal journal = new TransactionJournal();
+        Transaction tx = tx("0000000123", 100, TransactionStatus.SUCCESS);
+
+        journal.add(tx);
+
+        assertEquals(1, journal.size());
+        assertEquals(1, journal.findAll().size());
+        assertEquals(1, journal.findByAccount(new AccountNumber("0000000123")).size());
+    }
 }
