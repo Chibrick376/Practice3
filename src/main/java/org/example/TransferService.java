@@ -38,7 +38,7 @@ public class TransferService
         if (amount > MAX_TRANSFER_AMOUNT)
             throw new TransferLimitExceededException("Transfer limit exceeded");
 
-        if (from == to)
+        if (from.equals(to))
             throw new IllegalArgumentException("Cannot transfer to the same account");
 
         if (blockedAccounts.isBlocked(from.getNumber()))

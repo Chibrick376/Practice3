@@ -59,10 +59,11 @@ class TransferServiceTest
         TransferService service = service(new FakeNotificationService());
         BankAccount account = new DebitAccount(
                 new AccountNumber("0000000109"), "Ксения", 5_000);
-
+        BankAccount account2 = new DebitAccount(
+                new AccountNumber("0000000109"), "Ксения", 5_000);
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.transfer(account, account, 1_000)
+                () -> service.transfer(account, account2, 1_000)
         );
         assertEquals("Cannot transfer to the same account", ex.getMessage());
         assertEquals(5_000, account.getBalance());

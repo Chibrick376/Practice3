@@ -1,4 +1,11 @@
 package org.example;
 
-public class TransferRequest {
+/**
+ * Заявка на перевод между счетами.
+ */
+public record TransferRequest(
+        AccountNumber from,
+        AccountNumber to,
+        double amount)
+{
 }
