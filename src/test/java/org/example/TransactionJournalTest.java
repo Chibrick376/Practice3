@@ -126,4 +126,36 @@ class TransactionJournalTest
 
         assertEquals(2, journal.size());
     }
+
+    @Test
+    void findByAccountReturnsOnlyMatching()
+    {
+        TransactionJournal journal = new TransactionJournal();
+        AccountNumber target = new AccountNumber("0000000100");
+
+        Transaction t1 = new Transaction(TransactionType.TRANSFER, target, 100, TransactionStatus.SUCCESS);
+        Transaction t2 = new Transaction(TransactionType.TRANSFER, new AccountNumber("0000000200"), 200, TransactionStatus.SUCCESS);
+        Transaction t3 = new Transaction(TransactionType.TRANSFER, target, 300, TransactionStatus.SUCCESS);
+
+        journal.add(t1);
+        journal.add(t2);
+        journal.add(t3);
+
+        List<Transaction> result = journal.findByAccount(target);
+
+        assertEquals(2, result.size());
+        assertSame(t1, result.get(0));
+        assertSame(t3, result.get(1));
+    }
+
+    @Test
+    void findByAccountReturnsEmptyListIfNoMatches()
+    {
+        TransactionJournal journal = new TransactionJournal();
+        journal.add(tx("0000000001", 100, TransactionStatus.SUCCESS));
+
+        List<Transaction> result = journal.findByAccount(new AccountNumber("0000000999"));
+
+        assertTrue(result.isEmpty());
+    }
 }

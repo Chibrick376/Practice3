@@ -22,6 +22,19 @@ public class TransactionJournal
         return new ArrayList<>(transactions);
     }
 
+    public List<Transaction> findByAccount(AccountNumber number)
+    {
+        List<Transaction> result = new ArrayList<>();
+        for (Transaction tx : transactions)
+        {
+            if (tx.account().equals(number))
+            {
+                result.add(tx);
+            }
+        }
+        return result;
+    }
+
     public void removeRejected()
     {
         Iterator<Transaction> iterator = transactions.iterator();
