@@ -1,7 +1,7 @@
 package org.example;
 
 /**
- * Сервис для управления счетами.
+ * Сервис для управления счетами и переводами.
  * Скрывает работу с Repository от клиентского кода.
  */
 public class BankService
@@ -39,5 +39,21 @@ public class BankService
     public boolean closeAccount(AccountNumber number)
     {
         return accounts.deleteById(number);
+    }
+
+    public void transfer(
+            AccountNumber fromNumber,
+            AccountNumber toNumber,
+            double amount)
+    {
+        BankAccount from = accounts.findById(fromNumber);
+        if (from == null)
+            throw new IllegalArgumentException("Source account not found");
+
+        BankAccount to = accounts.findById(toNumber);
+        if (to == null)
+            throw new IllegalArgumentException("Destination account not found");
+
+        transferService.transfer(from, to, amount);
     }
 }

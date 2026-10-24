@@ -19,6 +19,18 @@ class BankServiceTest
         return new BankService(repository, transferService);
     }
 
+    private BankService createServiceWithBlocked(BlockedAccountRegistry blocked)
+    {
+        Repository<AccountNumber, BankAccount> repository = new InMemoryRepository<>();
+        TransferService transferService = new TransferService(
+                new NoCommission(),
+                new FakeNotificationService(),
+                blocked,
+                new TransactionJournal()
+        );
+        return new BankService(repository, transferService);
+    }
+
     @Test
     void openAndFindAccount()
     {
@@ -78,5 +90,102 @@ class BankServiceTest
         boolean closed = service.closeAccount(new AccountNumber("0000000004"));
 
         assertFalse(closed);
+    }
+
+    @Test
+    void successfulTransferByNumbers()
+    {
+        BankService service = createService();
+        AccountNumber fromId = new AccountNumber("0000000011");
+        AccountNumber toId = new AccountNumber("0000000012");
+
+        service.openAccount(new DebitAccount(fromId, "Ivan", 10_000));
+        service.openAccount(new DebitAccount(toId, "Petr", 2_000));
+
+        service.transfer(fromId, toId, 5_000);
+
+        assertEquals(5_000, service.findAccount(fromId).getBalance());
+        assertEquals(7_000, service.findAccount(toId).getBalance());
+    }
+
+    @Test
+    void transferWithMissingSenderThrowsException()
+    {
+        BankService service = createService();
+        AccountNumber toId = new AccountNumber("0000000013");
+
+        service.openAccount(new DebitAccount(toId, "Petr", 2_000));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.transfer(
+                        new AccountNumber("0000000014"),
+                        toId,
+                        1_000
+                )
+        );
+
+        assertEquals(2_000, service.findAccount(toId).getBalance());
+    }
+
+    @Test
+    void transferWithMissingReceiverThrowsException()
+    {
+        BankService service = createService();
+        AccountNumber fromId = new AccountNumber("0000000015");
+
+        service.openAccount(new DebitAccount(fromId, "Ivan", 10_000));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.transfer(
+                        fromId,
+                        new AccountNumber("0000000016"),
+                        1_000
+                )
+        );
+
+        assertEquals(10_000, service.findAccount(fromId).getBalance());
+    }
+
+    @Test
+    void transferFromBlockedAccountThrowsException()
+    {
+        BlockedAccountRegistry blocked = new BlockedAccountRegistry();
+        BankService service = createServiceWithBlocked(blocked);
+
+        AccountNumber fromId = new AccountNumber("0000000017");
+        AccountNumber toId = new AccountNumber("0000000018");
+
+        service.openAccount(new DebitAccount(fromId, "Ivan", 10_000));
+        service.openAccount(new DebitAccount(toId, "Petr", 2_000));
+        blocked.block(fromId);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.transfer(fromId, toId, 5_000)
+        );
+
+        assertEquals(10_000, service.findAccount(fromId).getBalance());
+        assertEquals(2_000, service.findAccount(toId).getBalance());
+    }
+
+    @Test
+    void transferWithInsufficientFundsThrowsException()
+    {
+        BankService service = createService();
+        AccountNumber fromId = new AccountNumber("0000000019");
+        AccountNumber toId = new AccountNumber("0000000020");
+
+        service.openAccount(new DebitAccount(fromId, "Ivan", 1_000));
+        service.openAccount(new DebitAccount(toId, "Petr", 2_000));
+
+        assertThrows(
+                InsufficientFundsException.class,
+                () -> service.transfer(fromId, toId, 5_000)
+        );
+
+        assertEquals(1_000, service.findAccount(fromId).getBalance());
+        assertEquals(2_000, service.findAccount(toId).getBalance());
     }
 }
