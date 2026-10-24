@@ -1,8 +1,10 @@
 package org.example;
 
+import java.util.List;
+import java.util.function.Predicate;
+
 /**
  * Сервис для управления счетами и переводами.
- * Скрывает работу с Repository от клиентского кода.
  */
 public class BankService
 {
@@ -55,5 +57,11 @@ public class BankService
             throw new IllegalArgumentException("Destination account not found");
 
         transferService.transfer(from, to, amount);
+    }
+
+    public List<BankAccount> findAccounts(Predicate<? super BankAccount> condition)
+    {
+        List<BankAccount> allAccounts = accounts.findAll();
+        return CollectionFunctions.filter(allAccounts, condition);
     }
 }

@@ -2,6 +2,9 @@ package org.example;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.function.Predicate;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class BankServiceTest
@@ -187,5 +190,32 @@ class BankServiceTest
 
         assertEquals(1_000, service.findAccount(fromId).getBalance());
         assertEquals(2_000, service.findAccount(toId).getBalance());
+    }
+
+    @Test
+    void findAccountsByPredicate()
+    {
+        BankService service = createService();
+        service.openAccount(new DebitAccount(new AccountNumber("0000000021"), "A", 100));
+        service.openAccount(new SavingsAccount(new AccountNumber("0000000022"), "B", 200_000, 100));
+        service.openAccount(new CreditAccount(new AccountNumber("0000000023"), "C", 0, 1000));
+
+        Predicate<BankAccount> rich = account -> account.getBalance() >= 100_000;
+        List<BankAccount> result = service.findAccounts(rich);
+
+        assertEquals(1, result.size());
+        assertEquals("B", result.get(0).getOwner());
+    }
+
+    @Test
+    void findAccountsReturnsNewList()
+    {
+        BankService service = createService();
+        service.openAccount(new DebitAccount(new AccountNumber("0000000024"), "A", 100));
+
+        List<BankAccount> result = service.findAccounts(account -> true);
+        result.clear();
+
+        assertEquals(1, service.findAccounts(account -> true).size());
     }
 }
