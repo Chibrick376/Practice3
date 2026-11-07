@@ -3,6 +3,7 @@ package org.example;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -169,5 +170,12 @@ public class BankService
     {
         return accounts.findAll().stream()
                 .noneMatch(CreditAccount.class::isInstance);
+    }
+
+    public Optional<BankAccount> findFirstRichAccount(double minBalance)
+    {
+        return accounts.findAll().stream()
+                .filter(a -> a.getBalance() >= minBalance)
+                .findFirst();
     }
 }
