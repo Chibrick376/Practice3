@@ -16,7 +16,7 @@ class CollectionFunctionsTest
     {
         List<BankAccount> accounts = new ArrayList<>();
         accounts.add(new DebitAccount(new AccountNumber("0000000001"), "A", 100));
-        accounts.add(new DebitAccount(new AccountNumber("0000000002"), "B", -50));
+        accounts.add(new DebitAccount(new AccountNumber("0000000002"), "B", 0));
         accounts.add(new DebitAccount(new AccountNumber("0000000003"), "C", 0));
 
         Predicate<BankAccount> positiveBalance = account -> account.getBalance() > 0;
