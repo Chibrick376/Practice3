@@ -151,4 +151,23 @@ public class BankService
                         .thenComparing(a -> a.getId().value()))
                 .toList();
     }
+
+    public boolean hasBlockedAccounts()
+    {
+        BlockedAccountRegistry blocked = transferService.getBlockedAccounts();
+        return accounts.findAll().stream()
+                .anyMatch(a -> blocked.isBlocked(a.getId()));
+    }
+
+    public boolean allAccountsPositive()
+    {
+        return accounts.findAll().stream()
+                .allMatch(a -> a.getBalance() > 0);
+    }
+
+    public boolean noCreditAccounts()
+    {
+        return accounts.findAll().stream()
+                .noneMatch(CreditAccount.class::isInstance);
+    }
 }

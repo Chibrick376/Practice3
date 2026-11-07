@@ -30,6 +30,11 @@ public class TransferService
         this.journal = journal;
     }
 
+    public BlockedAccountRegistry getBlockedAccounts()
+    {
+        return blockedAccounts;
+    }
+
     public void transfer(BankAccount from, BankAccount to, double amount)
     {
         if (amount <= 0)
