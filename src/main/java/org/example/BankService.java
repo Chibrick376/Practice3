@@ -1,5 +1,7 @@
 package org.example;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -63,5 +65,20 @@ public class BankService
     {
         List<BankAccount> allAccounts = accounts.findAll();
         return CollectionFunctions.filter(allAccounts, condition);
+    }
+
+    /**
+     * Возвращает счета в заданном порядке.
+     * Исходное хранилище не меняется: сортировка выполняется
+     * на копии списка.
+     */
+    public List<BankAccount> sortedAccounts(Comparator<? super BankAccount> comparator)
+    {
+        if (comparator == null)
+            throw new IllegalArgumentException("Comparator must not be null");
+
+        List<BankAccount> result = new ArrayList<>(accounts.findAll());
+        result.sort(comparator);
+        return result;
     }
 }
